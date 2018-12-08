@@ -10,4 +10,5 @@ func main() {
 	id := geo.HashFromLatLong(-30.043800, -51.140220)
 	fmt.Println(id)
 	fmt.Println(geo.HashKey(id, 4))
+	fmt.Println(geo.BoundingBoxRect(-30.043800, -51.140220, 100))
 }
