@@ -27,7 +27,7 @@ func PutItem(putItemRequest dynamodb.PutItemInput, latitude float64, longitude f
 	geoHashkey := HashKey(geoHash, config.GeoHashKeyLenght)
 	geoHashKeyStr := strconv.FormatUint(geoHashkey, 10)
 	hashAttr := dynamodb.AttributeValue{N: &geoHashStr}
-	attrValueMap := putItemRequest.ExpressionAttributeValues
+	attrValueMap := putItemRequest.Item
 	attrValueMap[config.GeoHashColumn] = &hashAttr
 
 	geoHashKeyAttr := dynamodb.AttributeValue{N: &geoHashKeyStr}
