@@ -61,3 +61,71 @@ func BoundingBoxRect(latitude float64, longitude float64, radius float64) s2.Rec
 func earthDistance(latLng1, latLng2 s2.LatLng) float64 {
 	return latLng1.Distance(latLng2).Radians() * 6367000.0
 }
+
+//FindCellIds find all cell ids from rect
+func FindCellIds(latLngRect s2.Rect) s2.CellUnion {
+	var queue []s2.CellID
+	var cellIds []s2.CellID
+
+	for c := begin(0); c != end(0); c = c.Next() {
+		if containsCellID(c, latLngRect) {
+			queue = append(queue, c)
+		}
+	}
+	processQueue(&queue, &cellIds, latLngRect)
+
+	if len(cellIds) > 0 {
+		cellUnion := s2.CellUnion(cellIds)
+		return cellUnion
+	}
+	return nil
+}
+
+func begin(level int) s2.CellID {
+	cellID := s2.CellID((uint64(0) << 61) + (uint64(0) | 1)).Parent(0).ChildBeginAtLevel(level)
+	return cellID
+}
+
+func end(level int) s2.CellID {
+	cellID := s2.CellID((uint64(5) << 61) + (uint64(0) | 1)).Parent(0).ChildBeginAtLevel(level)
+	return cellID
+}
+
+func containsCellID(cellID s2.CellID, latLngRect s2.Rect) bool {
+	return latLngRect.IntersectsCell(s2.CellFromCellID(cellID))
+}
+
+func processQueue(queue *[]s2.CellID, cellids *[]s2.CellID, latlngRect s2.Rect) {
+	for len(*queue) > 0 {
+		elem := (*queue)[0]
+		*queue = (*queue)[1:]
+		if !elem.IsValid() {
+			break
+		}
+		processChildren(elem, latlngRect, queue, cellids)
+	}
+}
+
+func processChildren(parent s2.CellID, latLngRect s2.Rect, queue *[]s2.CellID, cellids *[]s2.CellID) {
+	children := make([]s2.CellID, 4)
+	index := 0
+	for c := parent.ChildBegin(); c != parent.ChildEnd(); c = c.Next() {
+		if containsCellID(c, latLngRect) {
+			children[index] = c
+			index++
+		}
+	}
+	if len(children) == 1 || len(children) == 2 {
+		for _, child := range children {
+			if child.IsLeaf() {
+				*cellids = append(*cellids, child)
+			} else {
+				*queue = append(*queue, child)
+			}
+		}
+	} else if len(children) == 3 {
+		*cellids = append(*cellids, children...)
+	} else if len(children) == 4 {
+		*cellids = append(*cellids, parent)
+	}
+}

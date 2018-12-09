@@ -6,6 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 
 	"strconv"
+
+	"github.com/golang/geo/s2"
 )
 
 //Config provides the way to build ge request
@@ -33,4 +35,14 @@ func PutItem(putItemRequest dynamodb.PutItemInput, latitude float64, longitude f
 	geoHashKeyAttr := dynamodb.AttributeValue{N: &geoHashKeyStr}
 	attrValueMap[config.GeoHashKeyColumn] = &geoHashKeyAttr
 	return putItemRequest, nil
+}
+
+//RadiusQuery queries
+func RadiusQuery(queryRequest dynamodb.QueryInput, latitude float64, longitude float64, radius float64, config *Config) {
+	centerLatLng := s2.LatLngFromDegrees(latitude, longitude)
+	boundingBox := BoundingBoxRect(latitude, longitude, radius)
+}
+
+func generateQueries(queryRequest dynamodb.QueryInput, boundingBox s2.Rect, config *Config) {
+
 }
