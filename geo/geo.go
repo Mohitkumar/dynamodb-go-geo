@@ -42,7 +42,3 @@ func RadiusQuery(queryRequest dynamodb.QueryInput, latitude float64, longitude f
 	centerLatLng := s2.LatLngFromDegrees(latitude, longitude)
 	boundingBox := BoundingBoxRect(latitude, longitude, radius)
 }
-
-func generateQueries(queryRequest dynamodb.QueryInput, boundingBox s2.Rect, config *Config) {
-
-}
