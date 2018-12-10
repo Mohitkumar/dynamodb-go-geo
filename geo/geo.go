@@ -39,6 +39,8 @@ func PutItem(putItemRequest dynamodb.PutItemInput, latitude float64, longitude f
 
 //RadiusQuery queries
 func RadiusQuery(queryRequest dynamodb.QueryInput, latitude float64, longitude float64, radius float64, config *Config) {
-	centerLatLng := s2.LatLngFromDegrees(latitude, longitude)
 	boundingBox := BoundingBoxRect(latitude, longitude, radius)
+	GenerateQueries(queryRequest, boundingBox, config)
+
+	centerLatLng := s2.LatLngFromDegrees(latitude, longitude)
 }

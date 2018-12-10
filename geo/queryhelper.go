@@ -47,14 +47,26 @@ func GenerateQueries(queryRequest dynamodb.QueryInput, boundingBox s2.Rect, conf
 
 			hashKey := HashKey(innerHashrange.RangeMin, config.GeoHashKeyLenght)
 			hashKeystr := strconv.FormatUint(hashKey, 10)
-			keyConditions := make(map[string]dynamodb.Condition)
+			keyConditions := make(map[string]*dynamodb.Condition)
 			attrValueList := make([]*dynamodb.AttributeValue, 1)
 			attrValueList = append(attrValueList, &dynamodb.AttributeValue{N: &hashKeystr})
 			geoHashCondition := dynamodb.Condition{ComparisonOperator: aws.String("EQ"),
 				AttributeValueList: attrValueList}
-			keyConditions[config.GeoHashKeyColumn] = geoHashCondition
+			keyConditions[config.GeoHashKeyColumn] = &geoHashCondition
+			minRangeStr := strconv.FormatUint(innerHashrange.RangeMin, 10)
+			maxRangeStr := strconv.FormatUint(innerHashrange.RangeMax, 10)
+			minRange := dynamodb.AttributeValue{N: &minRangeStr}
+			maxRange := dynamodb.AttributeValue{N: &maxRangeStr}
+
+			geoHashCondition2 := dynamodb.Condition{ComparisonOperator: aws.String("BETWEEN"),
+				AttributeValueList: []*dynamodb.AttributeValue{&minRange, &maxRange}}
+			keyConditions[config.GeoHashColumn] = &geoHashCondition2
+			queryRequestCopy.SetKeyConditions(keyConditions)
+			queryRequestCopy.SetIndexName(config.GeoIndexName)
+			queryRequests = append(queryRequests, queryRequestCopy)
 		}
 	}
+	return queryRequests
 }
 
 func copyQueryInput(input dynamodb.QueryInput) dynamodb.QueryInput {
