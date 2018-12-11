@@ -30,6 +30,7 @@ func main() {
 	//createTable()
 	//testPutItem()
 	testQuery()
+	//testUtils()
 }
 
 func createTable() {
@@ -169,7 +170,18 @@ func testQuery() {
 	radiusQuery := geo.RadiusQuery(*query, -30.043800, -51.140220, 100000, config)
 	//fmt.Println(radiusQuery)
 	result := client.Execute(radiusQuery)
+	fmt.Println(result)
 	for _, res := range result {
 		fmt.Println(res["id"].S)
 	}
+}
+
+func testUtils() {
+	rect := geo.BoundingBoxRect(-30.043800, -51.140220, 10*1000)
+	fmt.Println(rect)
+	//cellUnion := geo.FindCellIds(rect)
+	//fmt.Println(cellUnion)
+	ranges := geo.HashRanges(rect)
+	fmt.Println(ranges)
+
 }

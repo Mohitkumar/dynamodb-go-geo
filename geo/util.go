@@ -107,12 +107,10 @@ func processQueue(queue *[]s2.CellID, cellids *[]s2.CellID, latlngRect s2.Rect) 
 }
 
 func processChildren(parent s2.CellID, latLngRect s2.Rect, queue *[]s2.CellID, cellids *[]s2.CellID) {
-	children := make([]s2.CellID, 4)
-	index := 0
+	children := make([]s2.CellID, 0)
 	for c := parent.ChildBegin(); c != parent.ChildEnd(); c = c.Next() {
 		if containsCellID(c, latLngRect) {
-			children[index] = c
-			index++
+			children = append(children, c)
 		}
 	}
 	if len(children) == 1 || len(children) == 2 {

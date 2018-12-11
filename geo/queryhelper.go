@@ -1,7 +1,6 @@
 package geo
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,7 +16,7 @@ func HashRanges(rect s2.Rect) []HashRange {
 
 func mergCells(cellUniun s2.CellUnion) []HashRange {
 	cellIds := []s2.CellID(cellUniun)
-	ranges := make([]HashRange, len(cellIds))
+	ranges := make([]HashRange, 0)
 	for _, cellID := range cellIds {
 		hashRange := NewHashRange(uint64(cellID.RangeMin()), uint64(cellID.RangeMax()))
 		wasMerged := false
@@ -39,19 +38,17 @@ func mergCells(cellUniun s2.CellUnion) []HashRange {
 //GenerateQueries generate queries
 func GenerateQueries(queryRequest dynamodb.QueryInput, boundingBox s2.Rect, config *Config) []dynamodb.QueryInput {
 	outerHashRanges := HashRanges(boundingBox)
-	queryRequests := make([]dynamodb.QueryInput, len(outerHashRanges))
+	queryRequests := make([]dynamodb.QueryInput, 0)
 
 	for _, outerHashRange := range outerHashRanges {
 		innerhashRanges := outerHashRange.split(config.GeoHashKeyLenght)
-		fmt.Println(innerhashRanges)
 		for _, innerHashrange := range innerhashRanges {
 			queryRequestCopy := copyQueryInput(queryRequest)
 
 			hashKey := HashKey(innerHashrange.RangeMin, config.GeoHashKeyLenght)
 			hashKeystr := strconv.FormatUint(hashKey, 10)
-			fmt.Println("str", hashKey, hashKeystr)
 			keyConditions := make(map[string]*dynamodb.Condition)
-			attrValueList := make([]*dynamodb.AttributeValue, 1)
+			attrValueList := make([]*dynamodb.AttributeValue, 0)
 			attrValueList = append(attrValueList, &dynamodb.AttributeValue{N: aws.String(hashKeystr)})
 			geoHashCondition := dynamodb.Condition{ComparisonOperator: aws.String("EQ"),
 				AttributeValueList: attrValueList}
