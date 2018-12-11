@@ -49,8 +49,8 @@ func BoundingBoxRect(latitude float64, longitude float64, radius float64) s2.Rec
 
 	latRefLatLng := s2.LatLngFromDegrees(latitude+refUnitLat, longitude)
 	longRefLatLong := s2.LatLngFromDegrees(latitude, longitude+refUnitLong)
-	latForRadius := radius / earthDistance(center, latRefLatLng)
-	longForRadius := radius / earthDistance(center, longRefLatLong)
+	latForRadius := radius / EarthDistance(center, latRefLatLng)
+	longForRadius := radius / EarthDistance(center, longRefLatLong)
 
 	minLatLng := s2.LatLngFromDegrees(latitude-latForRadius, longitude-longForRadius)
 	maxLatLng := s2.LatLngFromDegrees(latitude+latForRadius, longitude+longForRadius)
@@ -58,7 +58,7 @@ func BoundingBoxRect(latitude float64, longitude float64, radius float64) s2.Rec
 	return s2.Rect{Lat: r1.Interval{Lo: minLatLng.Lat.Radians(), Hi: maxLatLng.Lat.Radians()}, Lng: s1.Interval{Lo: minLatLng.Lng.Radians(), Hi: maxLatLng.Lng.Radians()}}
 }
 
-func earthDistance(latLng1, latLng2 s2.LatLng) float64 {
+func EarthDistance(latLng1, latLng2 s2.LatLng) float64 {
 	return latLng1.Distance(latLng2).Radians() * 6367000.0
 }
 

@@ -24,8 +24,8 @@ func mergCells(cellUniun s2.CellUnion) []HashRange {
 		for _, r := range ranges {
 			merged := r.merge(hashRange)
 			if merged {
-				break
 				wasMerged = true
+				break
 			}
 		}
 		if !wasMerged {
