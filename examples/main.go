@@ -23,12 +23,13 @@ type Item struct {
 }
 
 func main() {
-	id := geo.HashFromLatLong(-30.043800, -51.140220)
-	fmt.Println(id)
-	fmt.Println(geo.HashKey(id, 4))
-	fmt.Println(geo.BoundingBoxRect(-30.043800, -51.140220, 100))
+	//id := geo.HashFromLatLong(-30.043800, -51.140220)
+	//fmt.Println(id)
+	//fmt.Println(geo.HashKey(id, 4))
+	//fmt.Println(geo.BoundingBoxRect(-30.043800, -51.140220, 100))
 	//createTable()
-	testPutItem()
+	//testPutItem()
+	testQuery()
 }
 
 func createTable() {
@@ -143,4 +144,32 @@ func testPutItem() {
 
 	fmt.Println("Successfully added record to table")
 
+}
+
+func testQuery() {
+	sess, err := session.NewSession(&aws.Config{Region: aws.String("mumbai"), Endpoint: aws.String("http://localhost:8000")})
+	if err != nil {
+		fmt.Println("can not connect")
+		return
+	}
+	svc := dynamodb.New(sess)
+	client := geo.QueryClient{Service: svc}
+
+	query := &dynamodb.QueryInput{
+		TableName: aws.String("User"),
+	}
+
+	config := &geo.Config{
+		GeoIndexName:     "User_gsi",
+		GeoHashColumn:    "geoHash",
+		GeoHashKeyColumn: "geoHashKey",
+		GeoHashKeyLenght: 4,
+	}
+
+	radiusQuery := geo.RadiusQuery(*query, -30.043800, -51.140220, 100000, config)
+	//fmt.Println(radiusQuery)
+	result := client.Execute(radiusQuery)
+	for _, res := range result {
+		fmt.Println(res["id"].S)
+	}
 }

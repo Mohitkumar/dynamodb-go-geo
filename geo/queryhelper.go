@@ -1,6 +1,7 @@
 package geo
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -42,14 +43,16 @@ func GenerateQueries(queryRequest dynamodb.QueryInput, boundingBox s2.Rect, conf
 
 	for _, outerHashRange := range outerHashRanges {
 		innerhashRanges := outerHashRange.split(config.GeoHashKeyLenght)
+		fmt.Println(innerhashRanges)
 		for _, innerHashrange := range innerhashRanges {
 			queryRequestCopy := copyQueryInput(queryRequest)
 
 			hashKey := HashKey(innerHashrange.RangeMin, config.GeoHashKeyLenght)
 			hashKeystr := strconv.FormatUint(hashKey, 10)
+			fmt.Println("str", hashKey, hashKeystr)
 			keyConditions := make(map[string]*dynamodb.Condition)
 			attrValueList := make([]*dynamodb.AttributeValue, 1)
-			attrValueList = append(attrValueList, &dynamodb.AttributeValue{N: &hashKeystr})
+			attrValueList = append(attrValueList, &dynamodb.AttributeValue{N: aws.String(hashKeystr)})
 			geoHashCondition := dynamodb.Condition{ComparisonOperator: aws.String("EQ"),
 				AttributeValueList: attrValueList}
 			keyConditions[config.GeoHashKeyColumn] = &geoHashCondition
@@ -72,16 +75,32 @@ func GenerateQueries(queryRequest dynamodb.QueryInput, boundingBox s2.Rect, conf
 func copyQueryInput(input dynamodb.QueryInput) dynamodb.QueryInput {
 	copyInput := dynamodb.QueryInput{}
 	copyInput.SetAttributesToGet(input.AttributesToGet)
-	copyInput.SetConsistentRead(*input.ConsistentRead)
+	if input.ConsistentRead != nil {
+		copyInput.SetConsistentRead(*input.ConsistentRead)
+	}
 	copyInput.SetExclusiveStartKey(input.ExclusiveStartKey)
-	copyInput.SetIndexName(*input.IndexName)
+	if input.IndexName != nil {
+		copyInput.SetIndexName(*input.IndexName)
+	}
 	copyInput.SetKeyConditions(input.KeyConditions)
-	copyInput.SetLimit(*input.Limit)
-	copyInput.SetReturnConsumedCapacity(*input.ReturnConsumedCapacity)
-	copyInput.SetScanIndexForward(*input.ScanIndexForward)
-	copyInput.SetSelect(*input.Select)
-	copyInput.SetTableName(*input.TableName)
-	copyInput.SetFilterExpression(*input.FilterExpression)
+	if input.Limit != nil {
+		copyInput.SetLimit(*input.Limit)
+	}
+	if input.ReturnConsumedCapacity != nil {
+		copyInput.SetReturnConsumedCapacity(*input.ReturnConsumedCapacity)
+	}
+	if input.ScanIndexForward != nil {
+		copyInput.SetScanIndexForward(*input.ScanIndexForward)
+	}
+	if input.Select != nil {
+		copyInput.SetSelect(*input.Select)
+	}
+	if input.TableName != nil {
+		copyInput.SetTableName(*input.TableName)
+	}
+	if input.FilterExpression != nil {
+		copyInput.SetFilterExpression(*input.FilterExpression)
+	}
 	copyInput.SetExpressionAttributeNames(input.ExpressionAttributeNames)
 	copyInput.SetExpressionAttributeValues(input.ExpressionAttributeValues)
 	return copyInput
