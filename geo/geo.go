@@ -43,14 +43,17 @@ func PutItem(putItemRequest dynamodb.PutItemInput, latitude float64, longitude f
 //Execute execute the geo queries
 func (client QueryClient) Execute(queryRequest QueryRequest) []map[string]*dynamodb.AttributeValue {
 	result := make([]map[string]*dynamodb.AttributeValue, 0)
+	ch := make(chan []map[string]*dynamodb.AttributeValue)
 	for _, queryInput := range queryRequest.Queries {
-		res := executeQuery(client, queryInput, queryRequest.Filters)
+		go executeQuery(client, queryInput, queryRequest.Filters, ch)
+		res := <-ch
 		result = append(result, res...)
 	}
+	close(ch)
 	return result
 }
 
-func executeQuery(client QueryClient, queryInput dynamodb.QueryInput, filter Filter) []map[string]*dynamodb.AttributeValue {
+func executeQuery(client QueryClient, queryInput dynamodb.QueryInput, filter Filter, ch chan []map[string]*dynamodb.AttributeValue) {
 	result := make([]map[string]*dynamodb.AttributeValue, 0)
 	svc := client.Service
 	if svc != nil {
@@ -69,5 +72,5 @@ func executeQuery(client QueryClient, queryInput dynamodb.QueryInput, filter Fil
 			}
 		}
 	}
-	return result
+	ch <- result
 }
