@@ -28,6 +28,7 @@ func (hashRange HashRange) merge(hashRange2 HashRange) bool {
 	}
 
 	if hashRange.RangeMin-hashRange2.RangeMax <= uint64(hashRange.mergeThreashold) && hashRange.RangeMin-hashRange2.RangeMax > 0 {
+		hashRange.RangeMin = hashRange2.RangeMin
 		return true
 	}
 	return false

@@ -58,8 +58,20 @@ func BoundingBoxRect(latitude float64, longitude float64, radius float64) s2.Rec
 	return s2.Rect{Lat: r1.Interval{Lo: minLatLng.Lat.Radians(), Hi: maxLatLng.Lat.Radians()}, Lng: s1.Interval{Lo: minLatLng.Lng.Radians(), Hi: maxLatLng.Lng.Radians()}}
 }
 
+func BoundingBoxRect2(latitude float64, longitude float64, radius float64) s2.Rect {
+	p := s2.PointFromLatLng(s2.LatLngFromDegrees(latitude, longitude).Normalized())
+	radius_rad := EarthMetersToRadians(radius)
+	cap := s2.CapFromCenterHeight(p, (radius_rad*radius_rad)/2)
+	return cap.RectBound()
+}
+
+//EarthMetersToRadians convert earth meters to radians
+func EarthMetersToRadians(meters float64) float64 {
+	return (2 * math.Pi) * (meters / 1000 * 40075.017)
+}
+
 func EarthDistance(latLng1, latLng2 s2.LatLng) float64 {
-	return latLng1.Distance(latLng2).Radians() * 6367000.0
+	return latLng1.Distance(latLng2).Radians() * 6371000.0
 }
 
 //FindCellIds find all cell ids from rect
@@ -126,4 +138,16 @@ func processChildren(parent s2.CellID, latLngRect s2.Rect, queue *[]s2.CellID, c
 	} else if len(children) == 4 {
 		*cellids = append(*cellids, parent)
 	}
+}
+
+//NearbyCellIds find all cell ids within readius
+func NearbyCellIds(latitude float64, longitude float64, radius float64) []s2.CellID {
+	p := s2.PointFromLatLng(s2.LatLngFromDegrees(latitude, longitude))
+	angle := s1.Angle(radius / 6371000.0)
+	cap := s2.CapFromCenterAngle(p, angle)
+	region := s2.Region(cap)
+
+	rc := &s2.RegionCoverer{MaxLevel: 20, MinLevel: 9}
+	cellUnion := rc.Covering(region)
+	return []s2.CellID(cellUnion)
 }

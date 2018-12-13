@@ -11,12 +11,27 @@ import (
 //HashRanges get all ranges
 func HashRanges(rect s2.Rect) []HashRange {
 	cellids := FindCellIds(rect)
-	return mergCells(cellids)
+	return createRanges(cellids)
+}
+
+func HashRangesFromLatLng(latitude float64, longitude float64, radius float64) []HashRange {
+	cellids := NearbyCellIds(latitude, longitude, radius)
+	return createRanges(s2.CellUnion(cellids))
+}
+
+func createRanges(cellUniun s2.CellUnion) []HashRange {
+	cellIds := []s2.CellID(cellUniun)
+	ranges := make([]HashRange, 0)
+	for _, cellID := range cellIds {
+		hashRange := NewHashRange(uint64(cellID.RangeMin()), uint64(cellID.RangeMax()))
+		ranges = append(ranges, hashRange)
+	}
+	return ranges
 }
 
 func mergCells(cellUniun s2.CellUnion) []HashRange {
 	cellIds := []s2.CellID(cellUniun)
-	ranges := make([]HashRange, 0)
+	ranges := make([]HashRange, len(cellIds))
 	for _, cellID := range cellIds {
 		hashRange := NewHashRange(uint64(cellID.RangeMin()), uint64(cellID.RangeMax()))
 		wasMerged := false

@@ -29,8 +29,9 @@ func main() {
 	//fmt.Println(geo.BoundingBoxRect(-30.043800, -51.140220, 100))
 	//createTable()
 	//testPutItem()
-	testQuery()
-	//testUtils()
+	//testQuery()
+	testUtils()
+	//testNearbyCellIds()
 }
 
 func createTable() {
@@ -178,10 +179,25 @@ func testQuery() {
 
 func testUtils() {
 	rect := geo.BoundingBoxRect(-30.043800, -51.140220, 10*1000)
-	fmt.Println(rect)
 	//cellUnion := geo.FindCellIds(rect)
 	//fmt.Println(cellUnion)
 	ranges := geo.HashRanges(rect)
-	fmt.Println(ranges)
 
+	ranges2 := geo.HashRangesFromLatLng(-30.043800, -51.140220, 10*1000)
+	fmt.Println(ranges)
+	fmt.Println(ranges2)
+
+}
+
+func testBoundingBox() {
+	fmt.Println(geo.BoundingBoxRect(-30.043800, -51.140220, 10*1000))
+	fmt.Println(geo.BoundingBoxRect2(-30.043800, -51.140220, 1))
+}
+
+func testNearbyCellIds() {
+	cellids := geo.NearbyCellIds(-30.043800, -51.140220, 1*1000)
+	for _, cellid := range cellids {
+		fmt.Println(uint64(cellid))
+
+	}
 }
