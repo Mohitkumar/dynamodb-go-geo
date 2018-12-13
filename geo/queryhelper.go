@@ -5,54 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/golang/geo/s2"
 )
 
-//HashRanges get all ranges
-func HashRanges(rect s2.Rect) []HashRange {
-	cellids := FindCellIds(rect)
-	return createRanges(cellids)
-}
-
-func HashRangesFromLatLng(latitude float64, longitude float64, radius float64) []HashRange {
-	cellids := NearbyCellIds(latitude, longitude, radius)
-	return createRanges(s2.CellUnion(cellids))
-}
-
-func createRanges(cellUniun s2.CellUnion) []HashRange {
-	cellIds := []s2.CellID(cellUniun)
-	ranges := make([]HashRange, 0)
-	for _, cellID := range cellIds {
-		hashRange := NewHashRange(uint64(cellID.RangeMin()), uint64(cellID.RangeMax()))
-		ranges = append(ranges, hashRange)
-	}
-	return ranges
-}
-
-func mergCells(cellUniun s2.CellUnion) []HashRange {
-	cellIds := []s2.CellID(cellUniun)
-	ranges := make([]HashRange, len(cellIds))
-	for _, cellID := range cellIds {
-		hashRange := NewHashRange(uint64(cellID.RangeMin()), uint64(cellID.RangeMax()))
-		wasMerged := false
-
-		for _, r := range ranges {
-			merged := r.merge(hashRange)
-			if merged {
-				wasMerged = true
-				break
-			}
-		}
-		if !wasMerged {
-			ranges = append(ranges, hashRange)
-		}
-	}
-	return ranges
-}
-
 //GenerateQueries generate queries
-func GenerateQueries(queryRequest dynamodb.QueryInput, boundingBox s2.Rect, config *Config) []dynamodb.QueryInput {
-	outerHashRanges := HashRanges(boundingBox)
+func GenerateQueries(queryRequest dynamodb.QueryInput, latitude float64, longitude float64, radius float64, config *Config) []dynamodb.QueryInput {
+	outerHashRanges := HashRanges(latitude, longitude, radius)
 	queryRequests := make([]dynamodb.QueryInput, 0)
 
 	for _, outerHashRange := range outerHashRanges {

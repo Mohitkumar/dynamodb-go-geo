@@ -2,7 +2,6 @@ package geo
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 
@@ -44,9 +43,8 @@ func PutItem(putItemRequest dynamodb.PutItemInput, latitude float64, longitude f
 //Execute execute the geo queries
 func (client QueryClient) Execute(queryRequest QueryRequest) []map[string]*dynamodb.AttributeValue {
 	result := make([]map[string]*dynamodb.AttributeValue, 0)
-	for _, queryInput := range queryRequest.queries {
-		fmt.Println(queryInput.GoString())
-		res := executeQuery(client, queryInput, queryRequest.filter)
+	for _, queryInput := range queryRequest.Queries {
+		res := executeQuery(client, queryInput, queryRequest.Filters)
 		result = append(result, res...)
 	}
 	return result
@@ -58,7 +56,7 @@ func executeQuery(client QueryClient, queryInput dynamodb.QueryInput, filter Fil
 	if svc != nil {
 		for {
 			output, err := svc.Query(&queryInput)
-			if err != nil {
+			if err == nil {
 				items := output.Items
 				filterdItems := filter.FilterItems(items)
 				result = append(result, filterdItems...)

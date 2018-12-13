@@ -13,13 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
-type ItemInfo struct {
-	Country string `json:"country"`
-}
-
 type Item struct {
-	ID   int64    `json:"id"`
-	Info ItemInfo `json:"info"`
+	ID        int64   `json:"id"`
+	Country   string  `json:"country"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
 }
 
 func main() {
@@ -29,8 +27,7 @@ func main() {
 	//fmt.Println(geo.BoundingBoxRect(-30.043800, -51.140220, 100))
 	//createTable()
 	//testPutItem()
-	//testQuery()
-	testUtils()
+	testQuery()
 	//testNearbyCellIds()
 }
 
@@ -104,13 +101,11 @@ func createTable() {
 }
 
 func testPutItem() {
-	info := ItemInfo{
-		Country: "India",
-	}
-
 	item := Item{
-		ID:   1234,
-		Info: info,
+		ID:        1234,
+		Country:   "India",
+		Latitude:  -30.043800,
+		Longitude: -51.140220,
 	}
 
 	av, err := dynamodbattribute.MarshalMap(item)
@@ -168,30 +163,13 @@ func testQuery() {
 		GeoHashKeyLenght: 4,
 	}
 
-	radiusQuery := geo.RadiusQuery(*query, -30.043800, -51.140220, 100000, config)
-	//fmt.Println(radiusQuery)
+	radiusQuery := geo.RadiusQuery(*query, -30.043800, -51.140220, 10, config)
+
 	result := client.Execute(radiusQuery)
-	fmt.Println(result)
+	//fmt.Println(result)
 	for _, res := range result {
-		fmt.Println(res["id"].S)
+		fmt.Println(*res["id"].N)
 	}
-}
-
-func testUtils() {
-	rect := geo.BoundingBoxRect(-30.043800, -51.140220, 10*1000)
-	//cellUnion := geo.FindCellIds(rect)
-	//fmt.Println(cellUnion)
-	ranges := geo.HashRanges(rect)
-
-	ranges2 := geo.HashRangesFromLatLng(-30.043800, -51.140220, 10*1000)
-	fmt.Println(ranges)
-	fmt.Println(ranges2)
-
-}
-
-func testBoundingBox() {
-	fmt.Println(geo.BoundingBoxRect(-30.043800, -51.140220, 10*1000))
-	fmt.Println(geo.BoundingBoxRect2(-30.043800, -51.140220, 1))
 }
 
 func testNearbyCellIds() {

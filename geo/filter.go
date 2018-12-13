@@ -15,7 +15,7 @@ type Filter struct {
 
 //FilterItems return filters
 func (filter Filter) FilterItems(items []map[string]*dynamodb.AttributeValue) []map[string]*dynamodb.AttributeValue {
-	result := make([]map[string]*dynamodb.AttributeValue, len(items))
+	result := make([]map[string]*dynamodb.AttributeValue, 0)
 	for _, attrMap := range items {
 		latitude := extractField(attrMap, "latitude")
 		longitude := extractField(attrMap, "longitude")
