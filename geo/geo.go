@@ -40,20 +40,37 @@ func PutItem(putItemRequest dynamodb.PutItemInput, latitude float64, longitude f
 	return putItemRequest, nil
 }
 
-//Execute execute the geo queries
-func (client QueryClient) Execute(queryRequest QueryRequest) []map[string]*dynamodb.AttributeValue {
+//ExecuteAsync run all queries in async mode
+func (client QueryClient) ExecuteAsync(queryRequest QueryRequest) []map[string]*dynamodb.AttributeValue {
 	result := make([]map[string]*dynamodb.AttributeValue, 0)
-	ch := make(chan []map[string]*dynamodb.AttributeValue)
-	for _, queryInput := range queryRequest.Queries {
-		go executeQuery(client, queryInput, queryRequest.Filters, ch)
-		res := <-ch
+	c := make(chan []map[string]*dynamodb.AttributeValue, 100)
+	go executeRoutine(client, queryRequest, c)
+
+	for res := range c {
 		result = append(result, res...)
 	}
-	close(ch)
 	return result
 }
 
-func executeQuery(client QueryClient, queryInput dynamodb.QueryInput, filter Filter, ch chan []map[string]*dynamodb.AttributeValue) {
+func executeRoutine(client QueryClient, queryRequest QueryRequest, c chan []map[string]*dynamodb.AttributeValue) {
+	for _, queryInput := range queryRequest.Queries {
+		res := executeQuery(client, queryInput, queryRequest.Filters)
+		c <- res
+	}
+	close(c)
+}
+
+//Execute execute the geo queries
+func (client QueryClient) Execute(queryRequest QueryRequest) []map[string]*dynamodb.AttributeValue {
+	result := make([]map[string]*dynamodb.AttributeValue, 0)
+	for _, queryInput := range queryRequest.Queries {
+		res := executeQuery(client, queryInput, queryRequest.Filters)
+		result = append(result, res...)
+	}
+	return result
+}
+
+func executeQuery(client QueryClient, queryInput dynamodb.QueryInput, filter Filter) []map[string]*dynamodb.AttributeValue {
 	result := make([]map[string]*dynamodb.AttributeValue, 0)
 	svc := client.Service
 	if svc != nil {
@@ -72,5 +89,5 @@ func executeQuery(client QueryClient, queryInput dynamodb.QueryInput, filter Fil
 			}
 		}
 	}
-	ch <- result
+	return result
 }

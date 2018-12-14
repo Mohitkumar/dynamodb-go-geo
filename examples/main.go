@@ -165,7 +165,7 @@ func testQuery() {
 
 	radiusQuery := geo.RadiusQuery(*query, -30.030805, -51.1509909, 1780, config)
 
-	result := client.Execute(radiusQuery)
+	result := client.ExecuteAsync(radiusQuery)
 	//fmt.Println(result)
 	for _, res := range result {
 		fmt.Println(*res["id"].N)
