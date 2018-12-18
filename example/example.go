@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 
-	"github.com/Mohitkumar/dynamodb-go-geo/geo"
+	"github.com/Mohitkumar/dynamodb-go-geo"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
