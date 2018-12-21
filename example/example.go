@@ -163,7 +163,7 @@ func testQuery() {
 		GeoHashKeyLenght: 4,
 	}
 
-	radiusQuery := geo.RadiusQuery(*query, -30.030805, -51.1509909, 1780, config)
+	radiusQuery := geo.RadiusQuery(*query, -30.030805, -51.1509909, 5000, config)
 
 	result := client.ExecuteAsync(radiusQuery)
 	//fmt.Println(result)

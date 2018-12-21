@@ -2,11 +2,14 @@ package geo
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 
 	"strconv"
 )
+
+const poolSize int = 100
 
 //Config provides the way to build ge request
 type Config struct {
@@ -43,21 +46,36 @@ func PutItem(putItemRequest dynamodb.PutItemInput, latitude float64, longitude f
 //ExecuteAsync run all queries in async mode
 func (client QueryClient) ExecuteAsync(queryRequest QueryRequest) []map[string]*dynamodb.AttributeValue {
 	result := make([]map[string]*dynamodb.AttributeValue, 0)
-	c := make(chan []map[string]*dynamodb.AttributeValue, 100)
-	go executeRoutine(client, queryRequest, c)
+	c := make(chan []map[string]*dynamodb.AttributeValue, len(queryRequest.Queries))
+	pool := make(chan int, poolSize)
+	var wg sync.WaitGroup
+	for _, queryInput := range queryRequest.Queries {
+		wg.Add(1)
+		pool <- 1
+		go func(queryInput dynamodb.QueryInput) {
+			defer wg.Done()
+			executeRoutine(client, queryInput, queryRequest.Filters, c)
+			<-pool
+		}(queryInput)
 
+	}
+	close(pool)
+	go func() {
+		wg.Wait()
+		close(c)
+	}()
 	for res := range c {
 		result = append(result, res...)
 	}
+
 	return result
 }
 
-func executeRoutine(client QueryClient, queryRequest QueryRequest, c chan []map[string]*dynamodb.AttributeValue) {
-	for _, queryInput := range queryRequest.Queries {
-		res := executeQuery(client, queryInput, queryRequest.Filters)
-		c <- res
-	}
-	close(c)
+func executeRoutine(client QueryClient, queryInput dynamodb.QueryInput, queryFilter Filter,
+	c chan []map[string]*dynamodb.AttributeValue) {
+	res := executeQuery(client, queryInput, queryFilter)
+	c <- res
+
 }
 
 //Execute execute the geo queries
