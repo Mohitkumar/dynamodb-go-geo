@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 
@@ -26,7 +29,7 @@ func main() {
 	//fmt.Println(geo.HashKey(id, 4))
 	//fmt.Println(geo.BoundingBoxRect(-30.043800, -51.140220, 100))
 	//createTable()
-	//testPutItem()
+	//putItems()
 	testQuery()
 	//testNearbyCellIds()
 }
@@ -100,12 +103,35 @@ func createTable() {
 	fmt.Println("Created the table User")
 }
 
-func testPutItem() {
+func putItems() {
+	file, err := os.Open("/home/mohit/lagLong.txt")
+	var i int64 = 1
+	if err != nil {
+		panic("can not open file")
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		splits := strings.Split(line, ",")
+		lat, err := strconv.ParseFloat(splits[0], 64)
+		if err != nil {
+			panic("can not parse")
+		}
+		long, err := strconv.ParseFloat(splits[1], 64)
+		if err != nil {
+			panic("can not parse")
+		}
+		putItem(i, "India", lat, long)
+		i++
+	}
+}
+func putItem(id int64, country string, lat float64, long float64) {
 	item := Item{
-		ID:        1234,
-		Country:   "India",
-		Latitude:  -30.043800,
-		Longitude: -51.140220,
+		ID:        id,
+		Country:   country,
+		Latitude:  lat,
+		Longitude: long,
 	}
 
 	av, err := dynamodbattribute.MarshalMap(item)
@@ -124,7 +150,7 @@ func testPutItem() {
 		GeoHashKeyColumn: "geoHashKey",
 		GeoHashKeyLenght: 4,
 	}
-	newInput, err := geo.PutItem(input, -30.043800, -51.140220, config)
+	newInput, err := geo.PutItem(input, lat, long, config)
 	if err != nil {
 		fmt.Println("can not create put item", err)
 	}
@@ -163,7 +189,7 @@ func testQuery() {
 		GeoHashKeyLenght: 4,
 	}
 
-	radiusQuery := geo.RadiusQuery(*query, -30.030805, -51.1509909, 5000, config)
+	radiusQuery := geo.RadiusQuery(*query, 18.997, 72.854, 500000, config)
 
 	result := client.ExecuteAsync(radiusQuery)
 	//fmt.Println(result)
